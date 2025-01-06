@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { fetchInitialData, fetchMoreData } from "../services/api";
 import {
   Box,
@@ -10,7 +10,7 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
-import SearchBar from "./SearchBar"; // Import the new SearchBar component
+import SearchBar from "./SearchBar";
 
 interface DataItem {
   mission_name: string;
@@ -18,7 +18,7 @@ interface DataItem {
 }
 
 const debounce = (func: Function, wait: number) => {
-  let timeout: NodeJS.Timeout;
+  let timeout: ReturnType<typeof setTimeout>;
   return (...args: any[]) => {
     clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), wait);
@@ -29,29 +29,28 @@ const DataList = () => {
   const [data, setData] = useState<DataItem[]>([]);
   const [filteredData, setFilteredData] = useState<DataItem[]>([]);
   const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [hasMore, setHasMore] = useState(true);
   const [expanded, setExpanded] = useState<number | null>(null);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [limit, setLimit] = useState(10);
 
   const loadData = useCallback(
     async (reset = false) => {
       setLoading(true);
-      const currentPage = reset ? 1 : page;
       const fetchFunction = reset ? fetchInitialData : fetchMoreData;
-      const newData = await fetchFunction(currentPage, searchQuery, 5);
+      const newData: DataItem[] = await fetchFunction(limit);
 
       if (newData.length === 0) {
         setHasMore(false);
         setSnackbarOpen(true);
       } else {
         setData((prevData) => (reset ? newData : [...prevData, ...newData]));
-        if (!reset) setPage(currentPage + 1);
+        if (!reset) setLimit((prevLimit) => prevLimit + 5);
       }
       setLoading(false);
     },
-    [page, searchQuery]
+    [limit]
   );
 
   useEffect(() => {
@@ -67,7 +66,7 @@ const DataList = () => {
 
   const handleSearch = () => {
     setHasMore(true);
-    setPage(1);
+    setLimit(10);
     loadData(true);
   };
 

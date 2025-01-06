@@ -1,4 +1,3 @@
-import { useState } from "react";
 import DataList from "./components/DataList";
 import "./App.css";
 
